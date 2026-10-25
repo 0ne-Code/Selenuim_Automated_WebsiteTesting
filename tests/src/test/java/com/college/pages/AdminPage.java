@@ -1,13 +1,17 @@
 package com.college.pages;
 
+import com.college.config.ConfigReader;
+import com.college.utils.WaitUtils;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-
-import com.college.config.ConfigReader;
+import org.openqa.selenium.WebElement;
 
 public class AdminPage {
 
     private final WebDriver driver;
+    private final WaitUtils waitUtils;
+
     private final By fileInput = By.id("file-input");
     private final By uploadButton = By.id("upload-btn");
     private final By uploadMessage = By.id("upload-msg");
@@ -15,31 +19,48 @@ public class AdminPage {
 
     public AdminPage(WebDriver driver) {
         this.driver = driver;
+
+        int timeout = Integer.parseInt(
+                ConfigReader.get("timeout.seconds")
+        );
+
+        this.waitUtils = new WaitUtils(driver, timeout);
     }
 
     public void openAdminPage() {
         driver.get(ConfigReader.get("base.url") + "/admin");
     }
-    
+
     public void uploadCsv(String filePath) {
-        driver.findElement(fileInput).sendKeys(filePath);
-        driver.findElement(uploadButton).click();
+        WebElement input = waitUtils.waitForVisible(fileInput);
+        input.sendKeys(filePath);
+
+        waitUtils.waitForClickable(uploadButton).click();
     }
 
     public boolean isUploadMessageVisible() {
-        return !driver.findElements(uploadMessage).isEmpty()
-                && driver.findElement(uploadMessage).isDisplayed();
+        try {
+            return waitUtils.waitForVisible(uploadMessage).isDisplayed();
+        } catch (org.openqa.selenium.TimeoutException e) {
+            return false;
+        }
     }
 
     public String getUploadMessage() {
-        return driver.findElement(uploadMessage).getText();
+        return waitUtils.waitForVisible(uploadMessage).getText();
     }
 
     public boolean isDownloadReportVisible() {
-        return driver.findElement(downloadReportLink).isDisplayed();
+        try {
+            return waitUtils.waitForVisible(downloadReportLink)
+                    .isDisplayed();
+        } catch (org.openqa.selenium.TimeoutException e) {
+            return false;
+        }
     }
 
     public String getDownloadReportUrl() {
-        return driver.findElement(downloadReportLink).getDomAttribute("href");
+        return waitUtils.waitForVisible(downloadReportLink)
+                .getDomAttribute("href");
     }
 }

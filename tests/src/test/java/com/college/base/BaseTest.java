@@ -1,14 +1,21 @@
+
 package com.college.base;
 
 import com.college.config.ConfigReader;
+import com.college.pages.LoginPage;
+import com.college.utils.ScreenshotUtils;
+import com.college.utils.WaitUtils;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+
+import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import com.college.utils.WaitUtils;
+import java.io.File;
 
 public class BaseTest {
 
@@ -38,19 +45,33 @@ public class BaseTest {
         driver.get(baseUrl);
 
         try {
-            WaitUtils waitUtils = new WaitUtils(driver, 10);
+            int timeout = Integer.parseInt(
+                    ConfigReader.get("timeout.seconds")
+            );
+
+            WaitUtils waitUtils = new WaitUtils(driver, timeout);
             waitUtils.waitForVisible(By.id("username"));
+
         } catch (Exception e) {
             System.out.println("=== SELENIUM DEBUG INFO ===");
             System.out.println("Configured URL: " + baseUrl);
-            System.out.println("Actual URL: " + driver.getCurrentUrl());
-            System.out.println("Page title: " + driver.getTitle());
 
-            System.out.println("Page source: "
-                    + driver.getPageSource().substring(
-                            0,
-                            Math.min(1500, driver.getPageSource().length())
-                    ));
+            if (driver != null) {
+                System.out.println(
+                        "Actual URL: " + driver.getCurrentUrl()
+                );
+                System.out.println(
+                        "Page title: " + driver.getTitle()
+                );
+
+                String source = driver.getPageSource();
+                System.out.println(
+                        "Page source: "
+                                + source.substring(
+                                        0, Math.min(1500, source.length())
+                                )
+                );
+            }
 
             throw new RuntimeException(
                     "Login field was not found. Check the debug information above.",
@@ -59,9 +80,53 @@ public class BaseTest {
         }
     }
 
+    protected void loginAs(String role) {
+        String usernameKey = role + ".username";
+        String passwordKey = role + ".password";
+
+        LoginPage loginPage = new LoginPage(driver);
+
+        loginPage.login(
+                ConfigReader.get(usernameKey),
+                ConfigReader.get(passwordKey)
+        );
+
+        loginPage.waitForRecordsPage();
+    }
+
     @AfterMethod
-    public void tearDown() {
-        if (driver != null) {
+    public void tearDown(ITestResult result) {
+        if (driver == null) {
+            return;
+        }
+
+        try {
+            if (!result.isSuccess()) {
+                String fileName = result.getTestClass()
+                        .getRealClass()
+                        .getSimpleName()
+                        + "_"
+                        + result.getMethod().getMethodName()
+                        + "_"
+                        + System.currentTimeMillis()
+                        + ".png";
+
+                File screenshot = ScreenshotUtils.takeScreenshot(
+                        driver,
+                        "target/screenshots/" + fileName
+                );
+
+                System.out.println(
+                        "Failure screenshot saved: "
+                                + screenshot.getAbsolutePath()
+                );
+            }
+        } catch (Exception e) {
+            System.err.println(
+                    "Could not capture failure screenshot: "
+                            + e.getMessage()
+            );
+        } finally {
             driver.quit();
         }
     }

@@ -1,261 +1,137 @@
 package com.college.tests;
 
 import com.college.base.BaseTest;
-import com.college.pages.LoginPage;
-import com.college.pages.RecordsPage;
 import com.college.pages.RecordFormPage;
-import com.college.config.ConfigReader;
-import org.openqa.selenium.By;
+import com.college.pages.RecordsPage;
+
+// import org.openqa.selenium.By;
+// import org.openqa.selenium.support.ui.ExpectedConditions;
+// import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import java.time.Duration;
+// import java.net.URLEncoder;
+// import java.nio.charset.StandardCharsets;
+// import java.time.Duration;
+import java.util.UUID;
 
 public class CrudTest extends BaseTest {
 
+    private void searchForRecord(RecordsPage recordsPage, String name) {
+        recordsPage.search(name);
+    }
+
     @Test
     public void adminCanAddRecord() {
-
-        // Log in as admin
-        LoginPage loginPage = new LoginPage(driver);
-        loginPage.login(
-                ConfigReader.get("admin.username"),
-                ConfigReader.get("admin.password")
-        );
-        loginPage.waitForRecordsPage();
+        loginAs("admin");
 
         RecordsPage recordsPage = new RecordsPage(driver);
+        String uniqueId = UUID.randomUUID().toString().substring(0, 8);
+        String name = "Test Student " + uniqueId;
+        String email = "student" + uniqueId + "@example.com";
 
-        // Generate unique student details for this test run
-        String name = "Test Student " + System.currentTimeMillis();
-        String course = "Computer Science";
-        String email = "student" + System.currentTimeMillis() + "@example.com";
-
-        // Open the add-record form
-        recordsPage.clickAddButton();
-
-        // Fill in and submit the form
-        RecordFormPage formPage = new RecordFormPage(driver);
-        formPage.fillForm(name, course, email);
-        formPage.save();
-
-        // Verify that the student was added
-        // Search for the new student so pagination doesn't hide it
-        String searchUrl = ConfigReader.get("base.url")
-                + "/records?search="
-                + URLEncoder.encode(name, StandardCharsets.UTF_8);
-
-        driver.get(searchUrl);
-
-        // Wait until the new student appears in the table
-        WebDriverWait wait = new WebDriverWait(
-                driver, Duration.ofSeconds(10)
-        );
-
-        wait.until(d -> d.findElement(By.id("records-table"))
-                .getText()
-                .contains(name));
-
-        Assert.assertTrue(
-                driver.findElement(By.id("records-table"))
-                        .getText()
-                        .contains(name),
-                "The newly added student should appear in the records table."
-        );
-    }
-
-    @Test
-    public void adminCanEditRecord() {
-
-        LoginPage loginPage = new LoginPage(driver);
-        loginPage.login(
-                ConfigReader.get("admin.username"),
-                ConfigReader.get("admin.password")
-        );
-        loginPage.waitForRecordsPage();
-
-        RecordsPage recordsPage = new RecordsPage(driver);
-
-        String originalName = "Edit Student " + System.currentTimeMillis();
-        String updatedName = originalName + " Updated";
-        String email = "edit" + System.currentTimeMillis() + "@example.com";
-
-        // Create a student first
-        recordsPage.clickAddButton();
-
-        RecordFormPage formPage = new RecordFormPage(driver);
-        formPage.fillForm(originalName, "Computer Science", email);
-        formPage.save();
-
-        // Find the newly created student
-        String searchUrl = ConfigReader.get("base.url")
-                + "/records?search="
-                + java.net.URLEncoder.encode(
-                        originalName,
-                        java.nio.charset.StandardCharsets.UTF_8
-                );
-
-        driver.get(searchUrl);
-
-        new org.openqa.selenium.support.ui.WebDriverWait(
-                driver, java.time.Duration.ofSeconds(10)
-        ).until(d -> recordsPage.isRecordPresent(originalName));
-
-        // Open the edit form
-        recordsPage.clickEditFor(originalName);
-
-        // Update the student's details
-        driver.findElement(By.id("name")).clear();
-        driver.findElement(By.id("name")).sendKeys(updatedName);
-
-        driver.findElement(By.id("save-btn")).click();
-
-        // Verify the updated name
-        driver.get(
-                ConfigReader.get("base.url")
-                        + "/records?search="
-                        + java.net.URLEncoder.encode(
-                                updatedName,
-                                java.nio.charset.StandardCharsets.UTF_8
-                        )
-        );
-
-        new org.openqa.selenium.support.ui.WebDriverWait(
-                driver, java.time.Duration.ofSeconds(10)
-        ).until(d -> recordsPage.isRecordPresent(updatedName));
-
-        Assert.assertTrue(
-                recordsPage.isRecordPresent(updatedName),
-                "The edited student should appear with the updated name."
-        );
-    }
-  
-    @Test
-    public void adminCanDeleteRecord() {
-
-        // Log in as admin
-        LoginPage loginPage = new LoginPage(driver);
-        loginPage.login(
-                ConfigReader.get("admin.username"),
-                ConfigReader.get("admin.password")
-        );
-        loginPage.waitForRecordsPage();
-
-        RecordsPage recordsPage = new RecordsPage(driver);
-
-        // Generate unique student details
-        String name = "Delete Student " + System.currentTimeMillis();
-        String email = "delete" + System.currentTimeMillis() + "@example.com";
-
-        // Create a student to delete
         recordsPage.clickAddButton();
 
         RecordFormPage formPage = new RecordFormPage(driver);
         formPage.fillForm(name, "Computer Science", email);
         formPage.save();
 
-        // Search for the new student
-        String searchUrl = ConfigReader.get("base.url")
-                + "/records?search="
-                + java.net.URLEncoder.encode(
-                        name,
-                        java.nio.charset.StandardCharsets.UTF_8
-                );
+        searchForRecord(recordsPage, name);
 
-        driver.get(searchUrl);
-
-        org.openqa.selenium.support.ui.WebDriverWait wait =
-                new org.openqa.selenium.support.ui.WebDriverWait(
-                        driver, java.time.Duration.ofSeconds(10)
-                );
-
-        wait.until(d -> recordsPage.isRecordPresent(name));
-
-        // Delete the student
-        recordsPage.clickDeleteFor(name);
-
-        // Accept the JavaScript confirmation dialog
-        wait.until(org.openqa.selenium.support.ui.ExpectedConditions
-                .alertIsPresent());
-
-        driver.switchTo().alert().accept();
-
-        // Verify the student no longer appears
-        wait.until(d -> {
-            String tableText = d.findElement(By.id("records-table")).getText();
-            return !tableText.contains(name);
-        });
-
-        Assert.assertFalse(
+        Assert.assertTrue(
                 recordsPage.isRecordPresent(name),
-                "The deleted student should no longer appear in the records table."
+                "The newly added student should appear in the records table."
         );
     }
 
-    
     @Test
-    public void searchFindsExistingStudent() {
-        LoginPage loginPage = new LoginPage(driver);
-
-        loginPage.login(
-                ConfigReader.get("admin.username"),
-                ConfigReader.get("admin.password")
-        );
-
-        loginPage.waitForRecordsPage();
+    public void adminCanEditRecord() {
+        loginAs("admin");
 
         RecordsPage recordsPage = new RecordsPage(driver);
+        String uniqueId = UUID.randomUUID().toString().substring(0, 8);
+        String originalName = "Edit Student " + uniqueId;
+        String updatedName = "Updated Student " + uniqueId;
+        String email = "edit" + uniqueId + "@example.com";
 
-        // Search for a student that already exists
-        recordsPage.search("Student 01");
+        recordsPage.clickAddButton();
 
-        WebDriverWait wait = new WebDriverWait(
-                driver, Duration.ofSeconds(10)
+        RecordFormPage formPage = new RecordFormPage(driver);
+        formPage.fillForm(originalName, "Computer Science", email);
+        formPage.save();
+
+        searchForRecord(recordsPage, originalName);
+        Assert.assertTrue(
+                recordsPage.isRecordPresent(originalName),
+                "The student should exist before editing."
         );
 
-        wait.until(d ->
-                d.findElement(By.id("records-table"))
-                        .getText()
-                        .contains("Student 01")
-        );
+        recordsPage.clickEditFor(originalName);
+
+        formPage.fillForm(updatedName, "Computer Science", email);
+        formPage.save();
+
+        searchForRecord(recordsPage, updatedName);
 
         Assert.assertTrue(
-                recordsPage.isRecordPresent("Student 01"),
-                "The matching student should appear in the search results."
+                recordsPage.isRecordPresent(updatedName),
+                "The student's updated name should appear in the table."
+        );
+    }
+
+    @Test
+    public void adminCanDeleteRecord() {
+        loginAs("admin");
+
+        RecordsPage recordsPage = new RecordsPage(driver);
+        String uniqueId = UUID.randomUUID().toString().substring(0, 8);
+        String name = "Delete Student " + uniqueId;
+        String email = "delete" + uniqueId + "@example.com";
+
+        recordsPage.clickAddButton();
+
+        RecordFormPage formPage = new RecordFormPage(driver);
+        formPage.fillForm(name, "Computer Science", email);
+        formPage.save();
+
+        searchForRecord(recordsPage, name);
+        Assert.assertTrue(
+                recordsPage.isRecordPresent(name),
+                "The student should exist before deletion."
+        );
+
+        recordsPage.clickDeleteFor(name);
+        recordsPage.acceptDeleteConfirmation();
+
+        Assert.assertFalse(
+                recordsPage.isRecordPresent(name),
+                "The deleted student should no longer appear in the table."
+        );
+    }
+
+    @Test
+    public void searchFindsExistingStudent() {
+        loginAs("admin");
+
+        RecordsPage recordsPage = new RecordsPage(driver);
+        recordsPage.search("Student 001");
+
+        Assert.assertTrue(
+                recordsPage.isRecordPresent("Student 001"),
+                "Searching for an existing student should find the record."
         );
     }
 
     @Test
     public void searchWithNoMatchShowsNoResults() {
-        LoginPage loginPage = new LoginPage(driver);
-
-        loginPage.login(
-                ConfigReader.get("admin.username"),
-                ConfigReader.get("admin.password")
-        );
-
-        loginPage.waitForRecordsPage();
+        loginAs("admin");
 
         RecordsPage recordsPage = new RecordsPage(driver);
-
-        // Search for a name that should not exist
-        recordsPage.search("ZZZ_NoSuchStudent_987654");
-
-        WebDriverWait wait = new WebDriverWait(
-                driver, Duration.ofSeconds(10)
-        );
-
-        wait.until(d ->
-                !d.findElements(By.id("no-results")).isEmpty()
-                && d.findElement(By.id("no-results")).isDisplayed()
-        );
+        recordsPage.search("NoSuchStudent_XYZ_987654");
 
         Assert.assertTrue(
-                driver.findElement(By.id("no-results")).isDisplayed(),
-                "A no-results message should appear for an unmatched search."
+                recordsPage.isNoResultsVisible(),
+                "A search with no matches should show the no-results message."
         );
     }
 }

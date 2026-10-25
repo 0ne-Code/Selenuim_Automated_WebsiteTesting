@@ -6,6 +6,13 @@ import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 
+import com.college.base.BaseTest;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.OutputType;
+import java.io.File;
+import java.nio.file.Files; 
+
 public class ExtentReportListener implements ITestListener {
 
     private static ExtentReports extent;
@@ -49,6 +56,35 @@ public class ExtentReportListener implements ITestListener {
     @Override
     public void onTestFailure(ITestResult result) {
         test.get().fail(result.getThrowable());
+
+        try {
+            BaseTest baseTest = (BaseTest) result.getInstance();
+
+            // Get the WebDriver used by this test
+            java.lang.reflect.Field field =
+                    BaseTest.class.getDeclaredField("driver");
+
+            field.setAccessible(true);
+            WebDriver driver = (WebDriver) field.get(baseTest);
+
+            if (driver != null) {
+                byte[] screenshot =
+                        ((TakesScreenshot) driver).getScreenshotAs(
+                                OutputType.BYTES
+                        );
+
+                test.get().addScreenCaptureFromBase64String(
+                        java.util.Base64.getEncoder()
+                                .encodeToString(screenshot),
+                        "Failure Screenshot"
+                );
+            }
+        } catch (Exception e) {
+            test.get().warning(
+                    "Could not attach failure screenshot: "
+                            + e.getMessage()
+            );
+        }
     }
 
     @Override

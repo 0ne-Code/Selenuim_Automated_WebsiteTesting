@@ -3,24 +3,16 @@ package com.college.tests;
 import com.college.base.BaseTest;
 import com.college.config.ConfigReader;
 import com.college.pages.LoginPage;
+import com.college.pages.RecordsPage;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import java.time.Duration;
 
 public class LoginTest extends BaseTest {
 
     @Test
     public void adminCanLogin() {
-        LoginPage loginPage = new LoginPage(driver);
-
-        loginPage.login(
-                ConfigReader.get("admin.username"),
-                ConfigReader.get("admin.password")
-        );
+        loginAs("admin");
 
         Assert.assertTrue(
                 driver.getCurrentUrl().contains("/records"),
@@ -28,31 +20,23 @@ public class LoginTest extends BaseTest {
         );
 
         Assert.assertTrue(
-                driver.getPageSource().contains("admin"),
-                "The page should identify the logged-in admin."
+                new RecordsPage(driver).isAdminLinkVisible(),
+                "Admin should see the admin panel link."
         );
     }
 
     @Test
     public void userCanLogin() {
-        LoginPage loginPage = new LoginPage(driver);
-
-        loginPage.login(
-                ConfigReader.get("user.username"),
-                ConfigReader.get("user.password")
-        );
-
-        new WebDriverWait(driver, Duration.ofSeconds(10))
-            .until(d -> d.getCurrentUrl().contains("/records"));
+        loginAs("user");
 
         Assert.assertTrue(
                 driver.getCurrentUrl().contains("/records"),
                 "User should be redirected to the records page."
         );
 
-        Assert.assertTrue(
-                driver.getPageSource().contains("user"),
-                "The page should identify the logged-in user."
+        Assert.assertFalse(
+                new RecordsPage(driver).isAdminLinkVisible(),
+                "Regular user should not see the admin panel link."
         );
     }
 
@@ -67,16 +51,16 @@ public class LoginTest extends BaseTest {
 
         Assert.assertTrue(
                 loginPage.isErrorDisplayed(),
-                "An error should appear for an incorrect password."
+                "An error should appear after an invalid login."
         );
 
         Assert.assertEquals(
                 loginPage.getErrorMessage(),
-                "Invalid username or password"
+                "Invalid username or password",
+                "The login error message should match."
         );
     }
 
-    
     @Test
     public void emptyCredentialsAreBlockedByBrowser() {
         LoginPage loginPage = new LoginPage(driver);
@@ -85,57 +69,30 @@ public class LoginTest extends BaseTest {
 
         Assert.assertTrue(
                 driver.getCurrentUrl().contains("/login"),
-                "Empty credentials should not navigate away from login."
+                "The browser should remain on the login page."
         );
 
         Assert.assertTrue(
-                driver.findElement(
-                        org.openqa.selenium.By.id("username")
-                ).getDomAttribute("required") != null,
-                "Username field should have required validation."
+                loginPage.isUsernameRequired(),
+                "Username should be a required field."
         );
 
         Assert.assertTrue(
-                driver.findElement(
-                        org.openqa.selenium.By.id("password")
-                ).getDomAttribute("required") != null,
-                "Password field should have required validation."
+                loginPage.isPasswordRequired(),
+                "Password should be a required field."
         );
     }
 
-
-    
     @Test
     public void logoutReturnsToLoginPage() {
+        loginAs("admin");
+
         LoginPage loginPage = new LoginPage(driver);
-
-        loginPage.login(
-            ConfigReader.get("admin.username"),
-            ConfigReader.get("admin.password")
-        );
-
-        // Wait for the login redirect to finish.
-        new WebDriverWait(driver, Duration.ofSeconds(10))
-            .until(d -> d.getCurrentUrl().contains("/records"));
+        loginPage.clickLogout();
 
         Assert.assertTrue(
-            driver.getCurrentUrl().contains("/records"),
-            "Login failed. Current URL: " + driver.getCurrentUrl()
-        );
-
-        // Find and click Logout.
-        WebElement logoutButton = new WebDriverWait(driver, Duration.ofSeconds(10))
-            .until(d -> d.findElement(By.id("logout")));
-
-        logoutButton.click();
-
-        new WebDriverWait(driver, Duration.ofSeconds(10))
-            .until(d -> d.getCurrentUrl().contains("/login"));
-
-        Assert.assertTrue(
-            driver.getCurrentUrl().contains("/login"),
-            "Logout should return to the login page."
+                driver.getCurrentUrl().contains("/login"),
+                "Logout should return the user to the login page."
         );
     }
-
 }

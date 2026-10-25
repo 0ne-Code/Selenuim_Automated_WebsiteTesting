@@ -1,6 +1,27 @@
+
+# Maven build output
 target/
+**/target/
+
+# Test output and reports
 test-output/
 reports/
+*.html
+
+# Python generated files
 __pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# IDE settings
 .vscode/
+.idea/
+
+# Compiled Java files
 *.class
+
+# Environment variables and local secrets
+.env
+.env.*
+!.env.example

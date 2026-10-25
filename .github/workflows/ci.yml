@@ -1,0 +1,54 @@
+name: Selenium Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Flask dependencies
+        working-directory: app
+        run: |
+          pip install flask
+
+      - name: Start Flask application
+        working-directory: app
+        run: |
+          nohup python app.py > app.log 2>&1 &
+
+      - name: Wait for Flask application
+        run: |
+          for i in {1..30}; do
+            if curl -s http://127.0.0.1:5000/login > /dev/null; then
+              echo "Flask application is running."
+              break
+            fi
+            echo "Waiting for Flask application..."
+            sleep 2
+          done
+
+      - name: Run Selenium tests
+        working-directory: tests
+        run: mvn clean test

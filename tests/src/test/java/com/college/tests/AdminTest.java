@@ -3,29 +3,18 @@ package com.college.tests;
 import com.college.base.BaseTest;
 import com.college.config.ConfigReader;
 import com.college.pages.AdminPage;
-import com.college.pages.LoginPage;
+
+import org.openqa.selenium.Cookie;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.io.File;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-import java.io.File;
-
 public class AdminTest extends BaseTest {
-
-    private void loginAsAdmin() {
-        LoginPage loginPage = new LoginPage(driver);
-
-        loginPage.login(
-                ConfigReader.get("admin.username"),
-                ConfigReader.get("admin.password")
-        );
-
-        loginPage.waitForRecordsPage();
-    }
 
     private String getTestFilePath(String fileName) {
         return new File(
@@ -35,7 +24,7 @@ public class AdminTest extends BaseTest {
 
     @Test
     public void adminCanUploadValidCsv() {
-        loginAsAdmin();
+        loginAs("admin");
 
         AdminPage adminPage = new AdminPage(driver);
         adminPage.openAdminPage();
@@ -46,19 +35,25 @@ public class AdminTest extends BaseTest {
 
         Assert.assertTrue(
                 adminPage.isUploadMessageVisible(),
-                "Upload result message should be visible"
+                "The upload message should be visible."
+        );
+
+        String message = adminPage.getUploadMessage();
+
+        Assert.assertTrue(
+                message.contains("Uploaded:"),
+                "The success message should confirm the upload."
         );
 
         Assert.assertTrue(
-                adminPage.getUploadMessage().contains("Uploaded:")
-                        && adminPage.getUploadMessage().contains("(2 rows)"),
-                "The message should confirm that two rows were uploaded"
+                message.contains("(2 rows)"),
+                "The upload should report two rows."
         );
     }
 
     @Test
     public void invalidCsvHeadersAreRejected() {
-        loginAsAdmin();
+        loginAs("admin");
 
         AdminPage adminPage = new AdminPage(driver);
         adminPage.openAdminPage();
@@ -69,50 +64,56 @@ public class AdminTest extends BaseTest {
 
         Assert.assertTrue(
                 adminPage.isUploadMessageVisible(),
-                "An error message should be visible"
+                "The validation message should be visible."
         );
 
         Assert.assertEquals(
                 adminPage.getUploadMessage(),
-                "CSV must contain Name, Course, and Email columns"
+                "CSV must contain Name, Course, and Email columns",
+                "The app should reject CSV files with invalid headers."
         );
     }
 
     @Test
     public void adminCanAccessDownloadReport() {
-        loginAsAdmin();
+        loginAs("admin");
 
         AdminPage adminPage = new AdminPage(driver);
         adminPage.openAdminPage();
 
         Assert.assertTrue(
                 adminPage.isDownloadReportVisible(),
-                "The report download link should be visible"
+                "The admin should see the download report link."
         );
 
         Assert.assertTrue(
                 adminPage.getDownloadReportUrl().endsWith("/admin/report"),
-                "The report link should point to /admin/report"
+                "The report link should point to the report endpoint."
         );
     }
- 
+
     @Test
     public void reportEndpointReturnsCsvFile() throws Exception {
-        loginAsAdmin();
+        loginAs("admin");
 
-        // Get the session cookie created by Selenium after login.
-        String sessionCookie = driver.manage()
-                .getCookieNamed("session")
-                .getValue();
+        Cookie sessionCookie = driver.manage()
+                .getCookieNamed("session");
 
-        // Request the report using the same login session.
+        Assert.assertNotNull(
+                sessionCookie,
+                "The logged-in session cookie should exist."
+        );
+
+        String cookieHeader = sessionCookie.getName()
+                + "=" + sessionCookie.getValue();
+
         HttpClient client = HttpClient.newHttpClient();
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(
                         ConfigReader.get("base.url") + "/admin/report"
                 ))
-                .header("Cookie", "session=" + sessionCookie)
+                .header("Cookie", cookieHeader)
                 .GET()
                 .build();
 
@@ -124,7 +125,7 @@ public class AdminTest extends BaseTest {
         Assert.assertEquals(
                 response.statusCode(),
                 200,
-                "The report endpoint should return HTTP 200"
+                "The report endpoint should return HTTP 200."
         );
 
         Assert.assertTrue(
@@ -132,20 +133,20 @@ public class AdminTest extends BaseTest {
                         .firstValue("Content-Type")
                         .orElse("")
                         .contains("text/csv"),
-                "The response should have a CSV content type"
+                "The response should have a CSV content type."
         );
 
         Assert.assertTrue(
                 response.headers()
                         .firstValue("Content-Disposition")
                         .orElse("")
-                        .contains("filename=report.csv"),
-                "The response should specify report.csv as the download filename"
+                        .contains("report.csv"),
+                "The response should specify report.csv as the filename."
         );
 
         Assert.assertTrue(
                 response.body().startsWith("ID,Name,Course,Email"),
-                "The CSV should contain the expected column headers"
+                "The CSV should start with the expected column headers."
         );
     }
 }
