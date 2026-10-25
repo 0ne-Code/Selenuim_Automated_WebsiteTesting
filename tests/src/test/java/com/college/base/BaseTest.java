@@ -1,4 +1,3 @@
-
 package com.college.base;
 
 import com.college.config.ConfigReader;
@@ -6,10 +5,10 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import java.time.Duration;
+
+import com.college.utils.WaitUtils;
 
 public class BaseTest {
 
@@ -39,20 +38,20 @@ public class BaseTest {
         driver.get(baseUrl);
 
         try {
-            new WebDriverWait(driver, Duration.ofSeconds(10))
-                    .until(d -> !d.findElements(
-                            By.id("username")
-                    ).isEmpty());
+            WaitUtils waitUtils = new WaitUtils(driver, 10);
+            waitUtils.waitForVisible(By.id("username"));
         } catch (Exception e) {
             System.out.println("=== SELENIUM DEBUG INFO ===");
             System.out.println("Configured URL: " + baseUrl);
             System.out.println("Actual URL: " + driver.getCurrentUrl());
             System.out.println("Page title: " + driver.getTitle());
+
             System.out.println("Page source: "
                     + driver.getPageSource().substring(
                             0,
                             Math.min(1500, driver.getPageSource().length())
                     ));
+
             throw new RuntimeException(
                     "Login field was not found. Check the debug information above.",
                     e

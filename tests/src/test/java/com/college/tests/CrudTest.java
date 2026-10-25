@@ -66,4 +66,196 @@ public class CrudTest extends BaseTest {
                 "The newly added student should appear in the records table."
         );
     }
+
+    @Test
+    public void adminCanEditRecord() {
+
+        LoginPage loginPage = new LoginPage(driver);
+        loginPage.login(
+                ConfigReader.get("admin.username"),
+                ConfigReader.get("admin.password")
+        );
+        loginPage.waitForRecordsPage();
+
+        RecordsPage recordsPage = new RecordsPage(driver);
+
+        String originalName = "Edit Student " + System.currentTimeMillis();
+        String updatedName = originalName + " Updated";
+        String email = "edit" + System.currentTimeMillis() + "@example.com";
+
+        // Create a student first
+        recordsPage.clickAddButton();
+
+        RecordFormPage formPage = new RecordFormPage(driver);
+        formPage.fillForm(originalName, "Computer Science", email);
+        formPage.save();
+
+        // Find the newly created student
+        String searchUrl = ConfigReader.get("base.url")
+                + "/records?search="
+                + java.net.URLEncoder.encode(
+                        originalName,
+                        java.nio.charset.StandardCharsets.UTF_8
+                );
+
+        driver.get(searchUrl);
+
+        new org.openqa.selenium.support.ui.WebDriverWait(
+                driver, java.time.Duration.ofSeconds(10)
+        ).until(d -> recordsPage.isRecordPresent(originalName));
+
+        // Open the edit form
+        recordsPage.clickEditFor(originalName);
+
+        // Update the student's details
+        driver.findElement(By.id("name")).clear();
+        driver.findElement(By.id("name")).sendKeys(updatedName);
+
+        driver.findElement(By.id("save-btn")).click();
+
+        // Verify the updated name
+        driver.get(
+                ConfigReader.get("base.url")
+                        + "/records?search="
+                        + java.net.URLEncoder.encode(
+                                updatedName,
+                                java.nio.charset.StandardCharsets.UTF_8
+                        )
+        );
+
+        new org.openqa.selenium.support.ui.WebDriverWait(
+                driver, java.time.Duration.ofSeconds(10)
+        ).until(d -> recordsPage.isRecordPresent(updatedName));
+
+        Assert.assertTrue(
+                recordsPage.isRecordPresent(updatedName),
+                "The edited student should appear with the updated name."
+        );
+    }
+  
+    @Test
+    public void adminCanDeleteRecord() {
+
+        // Log in as admin
+        LoginPage loginPage = new LoginPage(driver);
+        loginPage.login(
+                ConfigReader.get("admin.username"),
+                ConfigReader.get("admin.password")
+        );
+        loginPage.waitForRecordsPage();
+
+        RecordsPage recordsPage = new RecordsPage(driver);
+
+        // Generate unique student details
+        String name = "Delete Student " + System.currentTimeMillis();
+        String email = "delete" + System.currentTimeMillis() + "@example.com";
+
+        // Create a student to delete
+        recordsPage.clickAddButton();
+
+        RecordFormPage formPage = new RecordFormPage(driver);
+        formPage.fillForm(name, "Computer Science", email);
+        formPage.save();
+
+        // Search for the new student
+        String searchUrl = ConfigReader.get("base.url")
+                + "/records?search="
+                + java.net.URLEncoder.encode(
+                        name,
+                        java.nio.charset.StandardCharsets.UTF_8
+                );
+
+        driver.get(searchUrl);
+
+        org.openqa.selenium.support.ui.WebDriverWait wait =
+                new org.openqa.selenium.support.ui.WebDriverWait(
+                        driver, java.time.Duration.ofSeconds(10)
+                );
+
+        wait.until(d -> recordsPage.isRecordPresent(name));
+
+        // Delete the student
+        recordsPage.clickDeleteFor(name);
+
+        // Accept the JavaScript confirmation dialog
+        wait.until(org.openqa.selenium.support.ui.ExpectedConditions
+                .alertIsPresent());
+
+        driver.switchTo().alert().accept();
+
+        // Verify the student no longer appears
+        wait.until(d -> {
+            String tableText = d.findElement(By.id("records-table")).getText();
+            return !tableText.contains(name);
+        });
+
+        Assert.assertFalse(
+                recordsPage.isRecordPresent(name),
+                "The deleted student should no longer appear in the records table."
+        );
+    }
+
+    
+    @Test
+    public void searchFindsExistingStudent() {
+        LoginPage loginPage = new LoginPage(driver);
+
+        loginPage.login(
+                ConfigReader.get("admin.username"),
+                ConfigReader.get("admin.password")
+        );
+
+        loginPage.waitForRecordsPage();
+
+        RecordsPage recordsPage = new RecordsPage(driver);
+
+        // Search for a student that already exists
+        recordsPage.search("Student 01");
+
+        WebDriverWait wait = new WebDriverWait(
+                driver, Duration.ofSeconds(10)
+        );
+
+        wait.until(d ->
+                d.findElement(By.id("records-table"))
+                        .getText()
+                        .contains("Student 01")
+        );
+
+        Assert.assertTrue(
+                recordsPage.isRecordPresent("Student 01"),
+                "The matching student should appear in the search results."
+        );
+    }
+
+    @Test
+    public void searchWithNoMatchShowsNoResults() {
+        LoginPage loginPage = new LoginPage(driver);
+
+        loginPage.login(
+                ConfigReader.get("admin.username"),
+                ConfigReader.get("admin.password")
+        );
+
+        loginPage.waitForRecordsPage();
+
+        RecordsPage recordsPage = new RecordsPage(driver);
+
+        // Search for a name that should not exist
+        recordsPage.search("ZZZ_NoSuchStudent_987654");
+
+        WebDriverWait wait = new WebDriverWait(
+                driver, Duration.ofSeconds(10)
+        );
+
+        wait.until(d ->
+                !d.findElements(By.id("no-results")).isEmpty()
+                && d.findElement(By.id("no-results")).isDisplayed()
+        );
+
+        Assert.assertTrue(
+                driver.findElement(By.id("no-results")).isDisplayed(),
+                "A no-results message should appear for an unmatched search."
+        );
+    }
 }

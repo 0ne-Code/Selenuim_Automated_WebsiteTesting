@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 <suite name="DevOps Selenium Suite">
+    <listeners>
+      <listener class-name="com.college.listeners.ExtentReportListener"/>
+    </listeners>
     <test name="Application Tests">
         <classes>
             <class name="com.college.tests.LoginTest"/>
             <class name="com.college.tests.AccessControlTest"/>
             <class name="com.college.tests.CrudTest"/>
+            <class name="com.college.tests.PaginationTest"/>
+            <class name="com.college.tests.AdminTest"/>
         </classes>
     </test>
 </suite>
