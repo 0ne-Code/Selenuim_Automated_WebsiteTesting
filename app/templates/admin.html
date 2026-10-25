@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Student Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Student Management</div>
+        <div class="nav-links">
+            <a href="/records" id="nav-records">Records</a>
+            <a href="/admin" id="nav-admin">Admin Panel</a>
+            <span id="welcome">Welcome, {{ session.get('username', 'Admin') }}</span>
+            <a href="/logout" id="logout">Logout</a>
+        </div>
+    </nav>
+
+    <main class="page-container">
+        <header class="page-header">
+            <div>
+                <h1>Admin Panel</h1>
+                <p>Import student data and download reports.</p>
+            </div>
+        </header>
+
+        {% if message %}
+            <div class="upload-message" id="upload-msg">
+                {{ message }}
+            </div>
+        {% endif %}
+
+        <section class="admin-card">
+            <h2>Upload Student Records</h2>
+            <p>
+                Upload a CSV file to add student records in bulk.
+                Your CSV must contain these column headers:
+                <strong>Name, Course, Email</strong>
+            </p>
+
+            <form action="/admin/upload" method="POST"
+                  enctype="multipart/form-data" id="upload-form">
+                <div class="form-group">
+                    <label for="file-input">Choose CSV file</label>
+                    <input type="file" id="file-input" name="file"
+                           accept=".csv">
+                </div>
+
+                <button type="submit" id="upload-btn">
+                    Upload CSV
+                </button>
+            </form>
+        </section>
+
+        <section class="admin-card">
+            <h2>Download Student Report</h2>
+            <p>
+                Download a CSV report containing the current student records.
+            </p>
+
+            <a href="/admin/report" id="download-report"
+               class="primary-link">
+                Download Report
+            </a>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

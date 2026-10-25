@@ -1,0 +1,6 @@
+target/
+test-output/
+reports/
+__pycache__/
+.vscode/
+*.class

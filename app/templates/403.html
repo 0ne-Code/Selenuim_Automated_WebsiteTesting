@@ -1,0 +1,31 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Denied | Student Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Student Management</div>
+        <div class="nav-links">
+            <a href="/records" id="nav-records">Records</a>
+            <span id="welcome">Welcome, {{ session.get('username', 'User') }}</span>
+            <a href="/logout" id="logout">Logout</a>
+        </div>
+    </nav>
+
+    <main class="error-page">
+        <div>
+            <h1>403</h1>
+            <h2>Access Denied</h2>
+            <p>You don't have permission to access this page.</p>
+            <a href="/records" class="primary-link" id="back-btn">
+                Back to Records
+            </a>
+        </div>
+    </main>
+</body>
+</html>
