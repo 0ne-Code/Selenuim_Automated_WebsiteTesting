@@ -3,7 +3,7 @@ package com.college.pages;
 import com.college.config.ConfigReader;
 import com.college.utils.WaitUtils;
 
-import org.openqa.selenium.Alert;
+// import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -61,10 +61,15 @@ public class RecordsPage {
     public void clickAddButton() {
         waitUtils.waitForClickable(addButton).click();
     }
-
+  
     public boolean isRecordPresent(String name) {
-        return waitUtils.waitForVisible(recordsTable)
-                .getText().contains(name);
+        try {
+            return waitUtils.waitForVisible(recordsTable)
+                    .getText().contains(name);
+        } catch (org.openqa.selenium.StaleElementReferenceException e) {
+            return driver.findElement(recordsTable)
+                    .getText().contains(name);
+        }
     }
 
     public void clickEditFor(String name) {
