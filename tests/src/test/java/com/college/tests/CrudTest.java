@@ -114,10 +114,10 @@ public class CrudTest extends BaseTest {
         loginAs("admin");
 
         RecordsPage recordsPage = new RecordsPage(driver);
-        recordsPage.search("Student 001");
+        recordsPage.search("Student 01");
 
         Assert.assertTrue(
-                recordsPage.isRecordPresent("Student 001"),
+                recordsPage.isRecordPresent("Student 01"),
                 "Searching for an existing student should find the record."
         );
     }
