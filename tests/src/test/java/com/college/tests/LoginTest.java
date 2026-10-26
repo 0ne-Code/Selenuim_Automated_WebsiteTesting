@@ -15,7 +15,7 @@ public class LoginTest extends BaseTest {
         loginAs("admin");
 
         Assert.assertTrue(
-                driver.getCurrentUrl().contains("/records"),
+                driver.getCurrentUrl().contains("/dashboard"),                                            //CAN TEST
                 "Admin should be redirected to the records page."
         );
 
