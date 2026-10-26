@@ -28,7 +28,7 @@ public class CrudTest extends BaseTest {
         RecordsPage recordsPage = new RecordsPage(driver);
         String uniqueId = UUID.randomUUID().toString().substring(0, 8);
         String name = "Test Student " + uniqueId;
-        String email = "student" + uniqueId + "@example.com";                                    //can test
+        String email = "student" + uniqueId + "example.com";                                    //can test
 
         recordsPage.clickAddButton();
 
@@ -38,7 +38,7 @@ public class CrudTest extends BaseTest {
 
         searchForRecord(recordsPage, name);
 
-        Assert.assertTrue(
+        Assert.assertTrue(  
                 recordsPage.isRecordPresent(name),
                 "The newly added student should appear in the records table."
         );
