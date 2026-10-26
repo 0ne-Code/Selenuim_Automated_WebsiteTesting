@@ -20,7 +20,7 @@ public class PaginationTest extends BaseTest {
         );
 
         Assert.assertTrue(
-                recordsPage.isRecordPresent("Student 01"),
+                recordsPage.isRecordPresent("Student 01"),                                      //can test
                 "The first student should appear in the records table."
         );
     }
@@ -33,7 +33,7 @@ public class PaginationTest extends BaseTest {
         String firstPage = recordsPage.getPageInfo();
 
         Assert.assertTrue(
-                firstPage.contains("1 of"),
+                firstPage.contains("1 of"),                                                     //can test
                 "The initial page should be page 1."
         );
 

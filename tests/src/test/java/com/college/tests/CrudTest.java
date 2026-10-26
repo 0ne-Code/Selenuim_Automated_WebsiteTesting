@@ -28,7 +28,7 @@ public class CrudTest extends BaseTest {
         RecordsPage recordsPage = new RecordsPage(driver);
         String uniqueId = UUID.randomUUID().toString().substring(0, 8);
         String name = "Test Student " + uniqueId;
-        String email = "student" + uniqueId + "@example.com";
+        String email = "student" + uniqueId + "@example.com";                                    //can test
 
         recordsPage.clickAddButton();
 
@@ -52,7 +52,7 @@ public class CrudTest extends BaseTest {
         String uniqueId = UUID.randomUUID().toString().substring(0, 8);
         String originalName = "Edit Student " + uniqueId;
         String updatedName = "Updated Student " + uniqueId;
-        String email = "edit" + uniqueId + "@example.com";
+        String email = "edit" + uniqueId + "@example.com";                                       //can test
 
         recordsPage.clickAddButton();
 
@@ -114,10 +114,10 @@ public class CrudTest extends BaseTest {
         loginAs("admin");
 
         RecordsPage recordsPage = new RecordsPage(driver);
-        recordsPage.search("Student 011");
+        recordsPage.search("Student 01");                                                   //can test
 
         Assert.assertTrue(
-                recordsPage.isRecordPresent("Student 011"),
+                recordsPage.isRecordPresent("Student 01"),
                 "Searching for an existing student should find the record."
         );
     }

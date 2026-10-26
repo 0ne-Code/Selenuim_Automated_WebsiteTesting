@@ -30,7 +30,7 @@ public class AdminTest extends BaseTest {
         adminPage.openAdminPage();
 
         adminPage.uploadCsv(
-                getTestFilePath("test_students.csv")
+                getTestFilePath("test_students.csv")                                            //can test
         );
 
         Assert.assertTrue(
@@ -59,7 +59,7 @@ public class AdminTest extends BaseTest {
         adminPage.openAdminPage();
 
         adminPage.uploadCsv(
-                getTestFilePath("invalid_students.csv")
+                getTestFilePath("invalid_students.csv")                                         //can test
         );
 
         Assert.assertTrue(
@@ -87,7 +87,7 @@ public class AdminTest extends BaseTest {
         );
 
         Assert.assertTrue(
-                adminPage.getDownloadReportUrl().endsWith("/admin/report"),
+                adminPage.getDownloadReportUrl().endsWith("/admin/report"),                     //can test
                 "The report link should point to the report endpoint."
         );
     }
@@ -132,7 +132,7 @@ public class AdminTest extends BaseTest {
                 response.headers()
                         .firstValue("Content-Type")
                         .orElse("")
-                        .contains("text/csv"),
+                        .contains("text/csv"),                                                          //can test
                 "The response should have a CSV content type."
         );
 
