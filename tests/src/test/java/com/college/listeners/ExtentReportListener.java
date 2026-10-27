@@ -24,6 +24,7 @@ public class ExtentReportListener implements ITestListener {
             ExtentSparkReporter sparkReporter =
                     new ExtentSparkReporter("target/ExtentReport.html");
 
+                    
             sparkReporter.config().setDocumentTitle(
                     "DevOps Selenium Test Report"
             );

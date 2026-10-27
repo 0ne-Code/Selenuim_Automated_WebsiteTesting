@@ -86,7 +86,7 @@ public class CrudTest extends BaseTest {
         RecordsPage recordsPage = new RecordsPage(driver);
         String uniqueId = UUID.randomUUID().toString().substring(0, 8);
         String name = "Delete Student " + uniqueId;
-        String email = "delete" + uniqueId + "@example.com";
+        String email = "delete" + uniqueId + "example.com";                                        //+-can test
 
         recordsPage.clickAddButton();
 
